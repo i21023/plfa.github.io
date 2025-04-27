@@ -647,10 +647,10 @@ similar to that used for totality.
 
 ```agda
 data _>_ (m n : ℕ) : Set where
-  gt : 
-    n < m 
+  gt :
+    n < m
     ------
-    → m > n 
+    → m > n
 
 data Trich (m n : ℕ) : Set where
 
@@ -675,9 +675,9 @@ data Trich (m n : ℕ) : Set where
 <-trich zero zero = equal refl
 <-trich zero (suc n) = smaller z<s
 <-trich (suc m) zero = greater (gt (z<s))
-<-trich (suc m) (suc n) with <-trich m n  
+<-trich (suc m) (suc n) with <-trich m n
 ...                           | equal m≡n = equal (cong suc m≡n)
-...                           | smaller m<n = smaller (s<s m<n)  
+...                           | smaller m<n = smaller (s<s m<n)
 ...                           | greater (gt m<n) = greater (gt (s<s m<n))
 ```
 
@@ -687,7 +687,23 @@ Show that addition is monotonic with respect to strict inequality.
 As with inequality, some additional definitions may be required.
 
 ```agda
--- Your code goes here
++-monor-< : ∀ (m n c : ℕ) → m < n → c + m < c + n
++-monor-< m n zero m<n = m<n
++-monor-< m n (suc c) m<n = s<s (+-monor-< m n c m<n)
+
++-monol-< : ∀ (m n c : ℕ) → m < n → m + c < n + c
++-monol-< m n c m<n rewrite +-comm m c | +-comm n c = +-monor-< m n c m<n
+
++-mono-< : ∀ (m n p q : ℕ)
+  → m < n
+  → p < q
+  -------------
+  → m + p < n + q
+
++-mono-< m n p q m<n p<q = <-trans (+-monor-< p q m p<q) (+-monol-< m n q m<n)
+-- m + p < m + q
+-- m + q < n + q
+
 ```
 
 #### Exercise `≤→<, <→≤` (recommended) {#leq-iff-less}
@@ -695,7 +711,13 @@ As with inequality, some additional definitions may be required.
 Show that `suc m ≤ n` implies `m < n`, and conversely.
 
 ```agda
--- Your code goes here
+≤→< : ∀ (m n : ℕ) → suc m ≤ n → m < n
+≤→< zero (suc n) (s≤s sm<n) = z<s
+≤→< (suc m) (suc n) (s≤s sm≤n) = s<s (≤→< m n sm≤n)
+
+<→≤ : ∀ (m n : ℕ) → m < n → suc m ≤ n
+<→≤ zero (suc n) z<s = s≤s z≤n
+<→≤ (suc m) (suc n) (s<s m<n) = s≤s (<→≤ m n m<n)
 ```
 
 #### Exercise `<-trans-revisited` (practice) {#less-trans-revisited}
