@@ -262,7 +262,7 @@ as that will make it easier to invoke reflexivity:
 ≤-refl : ∀ {n : ℕ}
     -----
   → n ≤ n
-≤-refl {zero} = z≤n
+≤-refl {zero} =  z≤n
 ≤-refl {suc n} = s≤s ≤-refl
 ```
 The proof is a straightforward induction on the implicit argument `n`.
@@ -361,9 +361,13 @@ follows by congruence.
 The above proof omits cases where one argument is `z≤n` and one
 argument is `s≤s`.  Why is it ok to omit them?
 
-```agda
--- Your code goes here
-```
+first case:
+zero ≤ n → suc n ≤ suc m
+
+second case:
+m ≤ zero → suc n → suc m
+
+but ∀ (x ∈ ℕ) : zero ≠ suc x 
 
 
 ## Total
@@ -542,6 +546,7 @@ Third, we combine the two previous results:
   → m + p ≤ n + q
 +-mono-≤ m n p q m≤n p≤q  =  ≤-trans (+-monoˡ-≤ m n p m≤n) (+-monoʳ-≤ n p q p≤q)
 ```
+
 Invoking `+-monoˡ-≤ m n p m≤n` proves `m + p ≤ n + p` and invoking
 `+-monoʳ-≤ n p q p≤q` proves `n + p ≤ n + q`, and combining these with
 transitivity proves `m + p ≤ n + q`, as was to be shown.
@@ -552,7 +557,23 @@ transitivity proves `m + p ≤ n + q`, as was to be shown.
 Show that multiplication is monotonic with regard to inequality.
 
 ```agda
--- Your code goes here
+*-monor-≤ : ∀ (a b c : ℕ) → b ≤ c → a * b ≤ a * c
+*-monor-≤ zero b c b≤c = z≤n
+*-monor-≤ (suc a) b c b≤c = +-mono-≤ b c (a * b) (a * c) b≤c (*-monor-≤ a b c b≤c)
+
+*-monol-≤ : ∀ (a b c : ℕ) → a ≤ b → a * c ≤ b * c
+*-monol-≤ a b c a≤b rewrite *-comm a c | *-comm b c = *-monor-≤ c a b a≤b
+
+*-mono-≤ : ∀ (m n p q : ℕ)
+  → m ≤ n
+  → p ≤ q
+    -------------
+  → m * p ≤ n * q
+
+*-mono-≤ m n p q m≤n p≤q = ≤-trans (*-monor-≤ m p q p≤q) (*-monol-≤ m n q m≤n)
+--trans:
+--*-monor-≤ m p q p≤q = m * p ≤ m * q
+--*-monol-≤ m n q m≤n = m * q ≤ n * q 
 ```
 
 
@@ -600,7 +621,14 @@ Show that strict inequality is transitive. Use a direct proof. (A later
 exercise exploits the relation between < and ≤.)
 
 ```agda
--- Your code goes here
+<-trans : ∀ {m n p : ℕ}
+  → m < n
+  → n < p
+  --------
+  → m < p
+
+<-trans z<s (s<s n<p) = z<s
+<-trans (s<s m<n) (s<s n<p) = s<s (<-trans m<n n<p)
 ```
 
 #### Exercise `trichotomy` (practice) {#trichotomy}
@@ -618,7 +646,39 @@ similar to that used for totality.
 [negation](/Negation/).)
 
 ```agda
--- Your code goes here
+data _>_ (m n : ℕ) : Set where
+  gt : 
+    n < m 
+    ------
+    → m > n 
+
+data Trich (m n : ℕ) : Set where
+
+  smaller :
+    m < n
+    -----------
+    → Trich m n
+
+  greater :
+    m > n
+    -----------
+    → Trich m n
+
+  equal :
+    m ≡ n
+    -----------
+    → Trich m n
+```
+
+```
+<-trich : ∀ (m n : ℕ) → Trich m n
+<-trich zero zero = equal refl
+<-trich zero (suc n) = smaller z<s
+<-trich (suc m) zero = greater (gt (z<s))
+<-trich (suc m) (suc n) with <-trich m n  
+...                           | equal m≡n = equal (cong suc m≡n)
+...                           | smaller m<n = smaller (s<s m<n)  
+...                           | greater (gt m<n) = greater (gt (s<s m<n))
 ```
 
 #### Exercise `+-mono-<` (practice) {#plus-mono-less}

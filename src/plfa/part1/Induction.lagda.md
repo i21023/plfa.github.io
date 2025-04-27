@@ -79,6 +79,8 @@ Give an example of an operator that has an identity and is
 associative but is not commutative.
 (You do not have to prove these properties.)
 
+f ∘ (g ∘ h) ≡ (f ∘ g) ∘ h 
+with id : x → x
 
 ## Associativity
 
@@ -221,7 +223,7 @@ If we can demonstrate both of these, then associativity of addition
 follows by induction.
 
 Here is the proposition's statement and proof:
-```agda
+```
 +-assoc : ∀ (m n p : ℕ) → (m + n) + p ≡ m + (n + p)
 +-assoc zero n p =
   begin
@@ -890,9 +892,11 @@ just apply the previous results which show addition
 is associative and commutative.
 
 ```agda
--- Your code goes here
++-swap : ∀ (m n p : ℕ) → m + (n + p) ≡ n + (m + p)
++-swap m n p rewrite +-comm m (n + p) | +-assoc n p m | cong (n +_) (+-comm p m) = refl
 ```
 
+m + (n + p) comm→ (n + p) + m assoc→ n + (p + m) cong(comm)→ n + (m + p)
 
 #### Exercise `*-distrib-+` (recommended) {#times-distrib-plus}
 
@@ -903,9 +907,10 @@ Show multiplication distributes over addition, that is,
 for all naturals `m`, `n`, and `p`.
 
 ```agda
--- Your code goes here
+*-distrib-+ : ∀ (m n p : ℕ) → (m + n) * p ≡ m * p + n * p 
+*-distrib-+ zero n p = refl
+*-distrib-+ (suc m) n p rewrite cong (p +_) (*-distrib-+ m n p) | sym (+-assoc p (m * p) (n * p) ) = refl
 ```
-
 
 #### Exercise `*-assoc` (recommended) {#times-assoc}
 
@@ -916,7 +921,9 @@ Show multiplication is associative, that is,
 for all naturals `m`, `n`, and `p`.
 
 ```agda
--- Your code goes here
+*-assoc : ∀ (m n p : ℕ) → (m * n) * p ≡ m * (n * p)
+*-assoc zero n p = refl
+*-assoc (suc m) n p rewrite *-distrib-+ n (m * n) p | cong ((n * p) +_) (*-assoc m n p) = refl
 ```
 
 
@@ -930,9 +937,18 @@ for all naturals `m` and `n`.  As with commutativity of addition,
 you will need to formulate and prove suitable lemmas.
 
 ```agda
--- Your code goes here
-```
+*-ident : ∀ (m : ℕ) → m * zero ≡ zero
+*-ident zero = refl
+*-ident (suc m) = *-ident m
 
+*-suc : ∀ (m n : ℕ) → n * suc m ≡ n + (n * m) 
+*-suc m zero = refl
+*-suc m (suc n) rewrite cong suc (cong (m +_) (*-suc m n)) | cong suc (sym (+-assoc m n (n * m))) | cong suc ( cong (_+ (n * m)) (+-comm m n)) | cong suc (+-assoc n m (n * m)) = refl
+
+*-comm : ∀ (m n : ℕ) → m * n ≡ n * m
+*-comm zero n rewrite *-ident n = refl
+*-comm (suc m) n rewrite *-suc m n | cong (n +_) (*-comm m n)= refl
+```
 
 #### Exercise `0∸n≡0` (practice) {#zero-monus}
 
@@ -943,7 +959,9 @@ Show
 for all naturals `n`. Did your proof require induction?
 
 ```agda
--- Your code goes here
+0∸n≡0 : ∀ (n : ℕ) → zero ∸ n ≡ zero 
+0∸n≡0 zero = refl
+0∸n≡0 (suc n) = refl
 ```
 
 
@@ -956,7 +974,10 @@ Show that monus associates with addition, that is,
 for all naturals `m`, `n`, and `p`.
 
 ```agda
--- Your code goes here
+∸-+-assoc : ∀ (m n p : ℕ) → m ∸ n ∸ p ≡ m ∸ (n + p)
+∸-+-assoc m zero p = refl
+∸-+-assoc zero (suc n) p = 0∸n≡0 p
+∸-+-assoc (suc m) (suc n) p = ∸-+-assoc m n p
 ```
 
 
@@ -971,7 +992,17 @@ Show the following three laws
 for all `m`, `n`, and `p`.
 
 ```
--- Your code goes here
+^-distribˡ-+-* : ∀ (m n p : ℕ) → m ^ (n + p) ≡ (m ^ n) * (m ^ p)
+^-distribˡ-+-* m zero p rewrite +-identityʳ(m ^ p) = refl
+^-distribˡ-+-* m (suc n) p rewrite cong (m *_) (^-distribˡ-+-* m n p) | *-assoc m (m ^ n) (m ^ p) = refl
+
+^-distribʳ-* : ∀ (m n p : ℕ) → (m * n) ^ p ≡ (m ^ p) * (n ^ p)
+^-distribʳ-* m n zero = refl
+^-distribʳ-* m n (suc p) rewrite sym (*-assoc (m * m ^ p) n (n ^ p)) | cong (_* (n ^ p)) (*-comm (m * m ^ p) n) | cong (_* (n ^ p)) (sym (*-assoc n m (m ^ p))) | cong (_* ((m * n) ^ p)) (*-comm m n)  | cong ((n * m) *_) (^-distribʳ-* m n p) | *-assoc (n * m) (m ^ p) (n ^ p) = refl
+
+^-*-assoc : ∀ (m n p : ℕ) → (m ^ n) ^ p ≡ m ^ (n * p)
+^-*-assoc m n zero rewrite cong (m ^_) (*-ident n) = refl
+^-*-assoc m n (suc p) rewrite cong (m ^_) (*-comm n (suc p)) | ^-distribˡ-+-* m n (p * n) | cong (m ^ n *_) (cong (m ^_) (*-comm p n)) | cong ((m ^ n) *_) (^-*-assoc m n p) = refl
 ```
 
 
@@ -986,6 +1017,31 @@ and asks you to define functions
     to    : ℕ → Bin
     from  : Bin → ℕ
 
+
+```agda
+data Bin : Set where
+  ⟨⟩ : Bin
+  _O : Bin → Bin
+  _I : Bin → Bin
+```
+
+```agda
+inc : Bin → Bin
+inc ⟨⟩ = _I ⟨⟩
+inc (a O) = a I
+inc (a I) = (inc a) O
+
+
+from : Bin → ℕ
+from ⟨⟩ = zero
+from (n O) = 2 * (from n)
+from (n I) = 1 + (2 * (from n))
+
+to : ℕ → Bin
+to zero = ⟨⟩
+to (suc n) = inc (to n)
+```
+
 Consider the following laws, where `n` ranges over naturals and `b`
 over bitstrings:
 
@@ -996,10 +1052,67 @@ over bitstrings:
 For each law: if it holds, prove; if not, give a counterexample.
 
 ```agda
--- Your code goes here
+2*x≡x+x : ∀ (x : ℕ) → 2 * x ≡ x + x
+2*x≡x+x zero = refl
+2*x≡x+x (suc x) =
+  begin
+    2 * suc x
+  ≡⟨⟩
+    (suc x) + (1 * (suc x))
+  ≡⟨⟩
+    (suc x) + ((suc x) + 0 * suc(x))
+  ≡⟨⟩
+    (suc x) + (suc x + 0)
+  ≡⟨ cong ((suc x) +_) (+-identityʳ (suc x)) ⟩
+    suc x + suc x 
+  ∎
+
+first : ∀ (b : Bin) → from (inc b) ≡ suc (from b)
+first ⟨⟩ = refl
+first (b O) = refl
+first (b I) =
+  begin
+    from (inc (b I))
+  ≡⟨⟩
+    from ((inc b) O)
+  ≡⟨⟩
+    2 * from (inc b)
+  ≡⟨ cong (2 *_) (first b) ⟩
+    2 * suc (from b)
+  ≡⟨ 2*x≡x+x (suc (from b))⟩
+    suc (from b) + suc (from b)
+  ≡⟨⟩
+    suc ((from b) + suc (from b))
+  ≡⟨ cong (suc) (+-suc (from b) (from b)) ⟩
+    suc (suc ((from b) + (from b)))
+  ≡⟨ sym (cong (suc) (cong (suc) (2*x≡x+x (from b))))⟩ 
+    suc (suc (2 * (from b)))
+  ≡⟨⟩ 
+    suc(1 + 2 * (from b))
+  ≡⟨⟩ 
+    suc (from (b I))
+   ∎
+
+--second : ∀ (b : Bin) → to (from b) ≡ b
+--does not hold if b starts with O
+second-ex : Bin
+second-ex = to (from (⟨⟩ O O O I))  
+
+--first : ∀ (b : Bin) → from (inc b) ≡ suc (from b)
+
+third : ∀ (n : ℕ) → from (to n) ≡ n
+third zero = refl
+third (suc n) = 
+  begin
+    from (to (suc n))
+    ≡⟨⟩
+    from (inc (to n))
+    ≡⟨ first (to n) ⟩
+    suc (from (to n))
+    ≡⟨ cong (suc) (third n) ⟩
+    suc n
+    ∎
 ```
-
-
 ## Standard library
 
 Definitions similar to those in this chapter can be found in the standard library:

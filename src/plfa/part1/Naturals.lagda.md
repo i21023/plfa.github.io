@@ -15,7 +15,6 @@ But the number of stars is finite, while natural numbers are infinite.
 Count all the stars, and you will still have as many natural numbers
 left over as you started with.
 
-
 ## The naturals are an inductive datatype
 
 Everyone is familiar with the natural numbers
@@ -40,6 +39,7 @@ as a pair of inference rules:
     m : ℕ
     ---------
     suc m : ℕ
+
 
 And here is the definition in Agda:
 ```agda
@@ -78,8 +78,9 @@ successor of two; and so on.
 Write out `7` in longhand.
 
 ```agda
--- Your code goes here
+seven = suc(suc(suc(suc(suc(suc(suc(zero)))))))
 ```
+
 
 You will need to give both a type signature and definition for the
 variable `seven`. Type `C-c C-l` in Emacs to instruct Agda to re-load.
@@ -106,7 +107,6 @@ with constructors.  The phrase
     ℕ : Set
 
 tells us that `ℕ` is the name of the new datatype, and that it is a
-`Set`, which is the way in Agda of saying that it is a type.  The
 keyword `where` separates the declaration of the datatype from the
 declaration of its constructors. Each constructor is declared on a
 separate line, which is indented to indicate that it belongs to the
@@ -438,8 +438,17 @@ other word for evidence, which we will use interchangeably, is _proof_.
 
 Compute `3 + 4`, writing out your reasoning as a chain of equations, using the equations for `+`.
 
+
 ```agda
--- Your code goes here
++-example : 3 + 4 ≡ 7
++-example =
+    3 + 4
+ ≡⟨⟩ suc (2 + 4) 
+ ≡⟨⟩ suc (suc (1 + 4) )
+ ≡⟨⟩ suc (suc (suc (0 + 4)))
+ ≡⟨⟩ suc (suc (suc 4))
+ ≡⟨⟩ 7
+ ∎
 ```
 
 
@@ -501,7 +510,15 @@ Compute `3 * 4`, writing out your reasoning as a chain of equations, using the e
 (You do not need to step through the evaluation of `+`.)
 
 ```agda
--- Your code goes here
+_ =
+  begin
+  3 * 4
+  ≡⟨⟩ 4 + (2 * 4)
+  ≡⟨⟩ 4 + (4 + (1 * 4))
+  ≡⟨⟩ 4 + (4 + (4 + (0 * 4)))
+  ≡⟨⟩ 4 + (4 + (4 + 0))
+  ≡⟨⟩ 12 
+  ∎
 ```
 
 
@@ -515,10 +532,20 @@ Define exponentiation, which is given by the following equations:
 Check that `3 ^ 4` is `81`.
 
 ```agda
--- Your code goes here
+_^_ : ℕ → ℕ → ℕ
+_ ^ zero = (suc zero)
+n ^ (suc m) = n * (n ^ m)
+
+_ =
+    begin
+    3 ^ 4 
+    ≡⟨⟩ 3 * (3 ^ 3)
+    ≡⟨⟩ 3 * (3 * (3 ^ 2))
+    ≡⟨⟩ 3 * (3 * (3 * (3 ^ 1)))
+    ≡⟨⟩ 3 * (3 * (3 * (3 * (3 ^ zero))))
+    ≡⟨⟩ 81
+    ∎
 ```
-
-
 
 ## Monus
 
@@ -598,7 +625,25 @@ Section [Logical Connectives](/Decidable/#logical-connectives).
 Compute `5 ∸ 3` and `3 ∸ 5`, writing out your reasoning as a chain of equations.
 
 ```agda
--- Your code goes here
+∸-example1 : 5 ∸ 3 ≡ 2
+∸-example1 =
+  begin
+  5 ∸ 3
+  ≡⟨⟩ 4 ∸ 2
+  ≡⟨⟩ 3 ∸ 1
+  ≡⟨⟩ 2 ∸ 0
+  ≡⟨⟩ 2
+  ∎
+
+∸-example2 : 3 ∸ 5 ≡ 0
+∸-example2 =
+  begin
+  3 ∸ 5
+  ≡⟨⟩ 2 ∸ 4
+  ≡⟨⟩ 1 ∸ 3
+  ≡⟨⟩ 0 ∸ 2
+  ≡⟨⟩ 0
+  ∎
 ```
 
 
@@ -699,7 +744,7 @@ so that rule doesn't give us any new equations:
 Then we repeat the process, so on the next day we know about all the
 equations from the day before, plus any equations added by the rules.
 The base case tells us nothing new, but now the inductive case adds
-more equations:
+more equa
 
     -- On the second day, we know about addition of 0 and 1.
     0 + 0 = 0     0 + 1 = 1     0 + 2 = 2     0 + 3 = 3     ...
@@ -790,8 +835,11 @@ definition above.)
 
 Begin by typing:
 
-    _+_ : ℕ → ℕ → ℕ
-    m + n = ?
+```agda
+_/_ : ℕ → ℕ → ℕ
+zero / n = n
+suc m / n = suc (m / n)
+```
 
 The question mark indicates that you would like Agda to help with
 filling in that part of the code. If you type `C-c C-l` (pressing
@@ -949,7 +997,20 @@ represents a positive natural, and represent zero by `⟨⟩ O`.
 Confirm that these both give the correct answer for zero through four.
 
 ```agda
--- Your code goes here
+inc : Bin → Bin
+inc ⟨⟩ = _I ⟨⟩
+inc (a O) = _I a
+inc (a I) = _O (inc a)
+
+
+from : Bin → ℕ
+from ⟨⟩ = zero
+from (n O) = _*_ 2 (from n)
+from (n I) = 1 + (_*_ 2 (from n))
+
+to : ℕ → Bin
+to zero = ⟨⟩
+to (suc n) = inc (to n)
 ```
 
 
